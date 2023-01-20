@@ -17,13 +17,14 @@ class CreateUserEventsTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->dateTime('date');
-            $table->string('location');
             $table->integer('duration');
-            $table->string('link')->index();
+            $table->string('third_party_name');
             $table->string('password')->nullable();
+            $table->string('calendly_link')->index();
+            $table->string('third_party_link')->index();
+            $table->unsignedInteger('user_event_status_id')->index();
             $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->foreign('user_id')->references('id')->on('users');
-            $table->unsignedInteger('user_event_status_id')->index();
             $table->foreign('user_event_status_id')->references('id')->on('user_event_statuses');
             $table->timestamps();
             $table->softDeletes();

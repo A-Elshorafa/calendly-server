@@ -16,12 +16,13 @@ class UserEvent extends Model
      */
     protected $fillable = [
         'name',
-        'link',
         'date',
         'user_id',
-        'location',
         'duration',
         'password',
+        'calendly_link',
+        'third_party_link',
+        'third_party_name',
         'user_event_status_id',
     ];
 
