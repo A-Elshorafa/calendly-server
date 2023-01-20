@@ -28,12 +28,23 @@ class AttendeeController extends Controller
             ]);
 
 
-            // update user event status from pending -> up coming
+            // get the up coming event status id
             $userEventStatus = UserEventStatus::where('name', 'up coming')->first();
 
             if (isset($userEventStatus)) {
-                UserEvent::where('id', $data['event_id'])
-                    ->update(["user_event_status_id" => $userEventStatus->id]);
+                $userEvent = UserEvent::where('id', $data['event_id'])->first();
+                
+                // to avoid malicious requests
+                if ($userEvent->is_subscribed === false) {
+                    // flage the event as subscribed which means can no longer use it
+                    $userEvent->is_subscribed = true;
+                    // update event to be up coming
+                    $userEvent->user_event_status_id = $userEventStatus->id;
+                    // save into databaes
+                    $userEvent->save();
+                } else {
+                    return response()->json(['success' => false, 'message' => 'this event is subscribed'], 200);
+                }
             } else {
                 return response()->json(['success' => false, 'message' => 'up coming status not found'], 200);
             }
