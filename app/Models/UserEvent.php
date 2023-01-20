@@ -20,6 +20,7 @@ class UserEvent extends Model
         'user_id',
         'duration',
         'password',
+        'is_subscribed',
         'calendly_link',
         'third_party_link',
         'third_party_name',
@@ -40,8 +41,8 @@ class UserEvent extends Model
         return $this->belongsTo('App\Models\User', 'user_id', 'id');
     }
 
-    public function attendees() {
-        return $this->hasMany('App\Models\Attendee');
+    public function attendee() {
+        return $this->hasOne('App\Models\Attendee');
     }
 
     public function status() {
