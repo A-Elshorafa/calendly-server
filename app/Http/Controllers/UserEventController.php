@@ -49,7 +49,7 @@ class UserEventController extends Controller
     }
 
     /**
-     * store new user event
+     * get event info by event id
      * 
      * @param Request $request
     */
@@ -62,6 +62,51 @@ class UserEventController extends Controller
             $userEvent = UserEvent::where('id', $data['event_id'])->first()->toArray();
 
             return response()->json(['success' => true, 'data' => $userEvent], 200);
+        } catch (\Exception $ex) {
+            return response()->json(['success' => false, 'messsage'=>'server error'], 500);
+        }
+    }
+
+    /**
+     * return upcoming events
+     * 
+     * @param Request $request
+    */
+    public function getUpComingEvents(Request $request)
+    {
+        try {
+            $statusName = $request->get('status');
+
+            // get up coming event status id
+            $upComingStatus = UserEventStatus::where('name', 'up coming')->first();
+
+            // get up coming events by status id
+            $upComingEvents = 
+                UserEvent::where('user_event_status_id', $upComingStatus->id)->get()->toArray();
+
+            return response()->json(['success' => true, 'data' => $upComingEvents], 200);
+        } catch (\Exception $ex) {
+            return response()->json(['success' => false, 'messsage'=>'server error'], 500);
+        }
+    }
+
+    /**
+     * return pending events
+     * 
+     * @param Request $request
+    */
+    public function getPendingEvents(Request $request)
+    {
+        try {
+            $statusName = $request->get('status');
+
+            // get pending event status id
+            $pendingStatus = UserEventStatus::where('name', 'pending')->first();
+
+            // get pending events by status id
+            $pendingEvents = UserEvent::where('id', $pendingStatus->id)->get()->toArray();
+
+            return response()->json(['success' => true, 'data' => $pendingEvents], 200);
         } catch (\Exception $ex) {
             return response()->json(['success' => false, 'messsage'=>'server error'], 500);
         }

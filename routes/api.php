@@ -24,6 +24,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // todo use auth middleware
 Route::post('storeEvent', [UserEventController::class, 'store']);
 Route::get('getEventInfo', [UserEventController::class, 'getEventInfo']);
+Route::get('getPendingEvents', [UserEventController::class, 'getPendingEvents']);
+Route::get('getUpComingEvents', [UserEventController::class, 'getUpComingEvents']);
 
 /// attendee endpoints \\\
 Route::post('addAttendee', [AttendeeController::class, 'addAttendee']);
