@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AttendeeController;
+use App\Http\Controllers\UserEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +19,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+/// user events endpoints \\\
+// todo use auth middleware
+Route::post('storeEvent', [UserEventController::class, 'store']);
+Route::get('getEventInfo', [UserEventController::class, 'getEventInfo']);
+
+/// attendee endpoints \\\
+Route::post('addAttendee', [AttendeeController::class, 'addAttendee']);
