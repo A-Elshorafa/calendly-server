@@ -12,6 +12,7 @@ class Attendee extends Model
     protected $fillable = [
         'name',
         'email',
+        'notes',
         'user_event_id'
     ];
 
