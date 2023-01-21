@@ -57,8 +57,10 @@ class AttendeeController extends Controller
                 return response()->json(['success' => false, 'message' => 'up coming status not found'], 200);
             }
 
-            // send subscription mails to host and attendee(invitee)
-            $this->sendSubsciptionMails($userEvent);
+            if (env('ALLOW_SUBSCRIPTION_NOTIFICATION', false)) {
+                // send subscription mails to host and attendee(invitee)
+                $this->sendSubsciptionMails($userEvent);
+            }
 
             return response()->json(['success' => true], 200);
         } catch (\Exception $ex) {
