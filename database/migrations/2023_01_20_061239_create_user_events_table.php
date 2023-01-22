@@ -19,6 +19,7 @@ class CreateUserEventsTable extends Migration
             $table->dateTime('date');
             $table->integer('duration');
             $table->string('third_party_name');
+            $table->boolean('agenda')->nullable();
             $table->string('password')->nullable();
             $table->string('third_party_link')->index();
             $table->boolean('is_subscribed')->default(false);
