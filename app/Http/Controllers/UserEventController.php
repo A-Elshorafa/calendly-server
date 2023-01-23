@@ -18,16 +18,16 @@ class UserEventController extends Controller
     {
         try {
             $data = $request->all();
-            $eventStatus = UserEventStatus::where('name', $data['status'])->first();
+            $pendingEvent = UserEventStatus::where('name', 'pending')->first();
     
-            if (isset($eventStatus) && $eventStatus->id > 0) {
+            if (isset($pendingEvent)) {
                 // create user event with the request data
                 $createdEvent = UserEvent::create([
                     'name' => $data['name'],
                     'user_id' => $data['user_id'], // todo: get authenticated user id
                     'duration' => $data['duration'],
                     'password' => $data['password'],
-                    'user_event_status_id' => $eventStatus->id,
+                    'user_event_status_id' => $pendingEvent->id,
                     'date' => (new Carbon)->parse($data['date']),
                     'third_party_link' => $data['third_party_link'],
                     'third_party_name' => $data['third_party_name'],
@@ -35,11 +35,12 @@ class UserEventController extends Controller
 
                 // customize the local url
                 // ex:// localhost:8000/{event_id}/{customized_part}
+                $calendlyLink = env('FRONTEND_URL') . '/' . $createdEvent->id . '/' . $data['customized_url'];
                 $createdEvent->update([
-                    'calendly_link' => env('FRONTEND_URL') . '/' . $createdEvent->id . '/' . $data['customized_url']
+                    'calendly_link' => $calendlyLink
                 ]);
 
-                return response()->json(['success' => true], 200);
+                return response()->json(['success' => true, 'calendly_link' => $calendlyLink], 200);
             }
 
             return response()->json(['success' => false, 'message' => 'invalid status name'], 200);
