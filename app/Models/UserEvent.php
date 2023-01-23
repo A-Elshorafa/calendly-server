@@ -29,6 +29,8 @@ class UserEvent extends Model
         'user_event_status_id',
     ];
 
+    protected $with = ['availableDates.times'];
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -49,5 +51,13 @@ class UserEvent extends Model
 
     public function status() {
         return $this->belongsTo('App\Models\UserEventStatus', 'user_event_status_id', 'id');
+    }
+
+    public function availableDates() {
+        return $this->hasMany('App\Models\UserEventAvailableDates', 'user_event_id', 'id');
+    }
+
+    public function availableTimes() {
+        return $this->hasManyThrough('App\Models\UserEventAvailableTimes', 'App\Models\UserEventAvailableDates', 'user_event_id', 'user_event_available_date_id');
     }
 }
