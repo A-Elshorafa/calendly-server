@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use App\Models\UserEvent;
 use Illuminate\Http\Request;
 use App\Models\UserEventStatus;
+use App\Models\UserEventAvailableDates;
+use App\Models\UserEventAvailableTimes;
 
 class UserEventController extends Controller
 {
@@ -32,6 +34,38 @@ class UserEventController extends Controller
                     'third_party_link' => $data['third_party_link'],
                     'third_party_name' => $data['third_party_name'],
                 ]);
+
+                /**
+                 * Create the available date then inject available date id to times data
+                 * then apply insert one time
+                 *
+                 * sample of availble dates and times data
+                 * [{
+                 *   date: "dd-mm-yyyy",
+                 *   times: ["time-1", "time-2", "time-3"]
+                 * }]
+                */
+                if ($request->has('available_dates_times')) {
+                    $availableDatesAndTimes = $request->get('available_dates_times');
+                    foreach ($availableDatesAndTimes as $pair) {
+                        $availableDate = UserEventAvailableDates::create([
+                            'date' => $pair['date'],
+                            'user_event_id' => $createdEvent->id
+                        ]);
+    
+                        // extract times per date
+                        $availableTimes = array_map(function($time) use ($availableDate) {
+                            $time = [
+                                'time' => $time,
+                                'user_event_available_date_id' => $availableDate->id
+                            ];
+                            return $time;
+                        }, $pair['times']);
+
+                        // apply mass assertion
+                        UserEventAvailableTimes::insert($availableTimes);
+                    }
+                }
 
                 // customize the local url
                 // ex:// localhost:8000/{event_id}/{customized_part}
