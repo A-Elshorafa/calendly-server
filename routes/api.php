@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendeeController;
 use App\Http\Controllers\UserEventController;
+use App\Http\Controllers\ThirdParityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,3 +30,11 @@ Route::get('getUpComingEvents', [UserEventController::class, 'getUpComingEvents'
 
 /// attendee endpoints \\\
 Route::post('addAttendee', [AttendeeController::class, 'addAttendee']);
+
+//// third-party \\\\
+
+Route::get('/authorizeUser', [ThirdParityController::class, "authorizeUser"]);
+
+Route::get('/setUserTokens', [ThirdParityController::class, "storeUserTokens"])->middleware('auth:sanctum');
+Route::get('/refreshAccessToken', [ThirdParityController::class, 'refreshAccessToken'])->middleware('auth:sanctum');
+Route::get('/getUserInfo', [ThirdParityController::class, 'getUserInfo'])->middleware('auth:sanctum');
