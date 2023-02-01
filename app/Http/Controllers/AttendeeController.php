@@ -10,6 +10,7 @@ use App\Models\UserEvent;
 use App\Mail\SubscribeMail;
 use Illuminate\Http\Request;
 use App\Models\UserEventStatus;
+use Illuminate\Support\Facades\DB;
 
 class AttendeeController extends Controller
 {
@@ -18,11 +19,13 @@ class AttendeeController extends Controller
      * 
      * @param Request $request
     */
-    public function addAttendee(Request $request)
+    public function subscribeToEvent(Request $request)
     {
+        $request->validate(['name' => 'required', 'email' => 'email']);
         try {
             $data = $request->all();
     
+            DB::beginTransaction();
             // create new attendee
             Attendee::create([
                 'name' => $data['name'],
@@ -48,6 +51,10 @@ class AttendeeController extends Controller
                     $userEvent->is_subscribed = true;
                     // update event to be up coming
                     $userEvent->user_event_status_id = $upcomingEventStatus->id;
+                    // set subscribed_on as the date selected by attenddee
+                    $userEvent->subscribed_on = $data['subscribed_on'];
+                    // update expire date
+                    $userEvent->expire_at = (new Carbon($data['subscribed_on']))->add($userEvent->duration, "minutes");
                     // save into databaes
                     $userEvent->save();
                 } else {
@@ -62,8 +69,13 @@ class AttendeeController extends Controller
                 $this->sendSubsciptionMails($userEvent);
             }
 
-            return response()->json(['success' => true], 200);
+            DB::commit();
+            // refresh event after update, eager load host(user) relation
+            $userEvent = $userEvent->fresh('host');
+            return response()->json(['success' => true, 'data' => $userEvent], 200);
         } catch (\Exception $ex) {
+            DB::rollBack();
+            throw $ex;
             return response()->json(['success' => false, 'messsage'=>'server error'], 500);
         }
     }
@@ -77,7 +89,7 @@ class AttendeeController extends Controller
         $attendee = $userEvent->attendee->toArray();
         $userEvent = $userEvent->toArray();
         // format event date, ex: 19:00 - Friday, 20 January 2023
-        $userEvent['date'] = (new Carbon($userEvent['date']))->format('H:i - l, d F Y');
+        $userEvent['subscribed_on'] = (new Carbon($userEvent['subscribed_on']))->format('H:i - l, d F Y');
         // send subscription mail to host
         Mail::to($host['email'])->send(new SubscribeMail([
             'host' => $host,

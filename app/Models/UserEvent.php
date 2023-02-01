@@ -16,13 +16,15 @@ class UserEvent extends Model
      */
     protected $fillable = [
         'name',
-        'date',
+        'notes',
         'agenda',
         'user_id',
         'duration',
         'password',
+        'expire_at',
         'is_notified',
         'is_subscribed',
+        'subscribed_on',
         'calendly_link',
         'third_party_link',
         'third_party_name',
@@ -37,7 +39,9 @@ class UserEvent extends Model
      * @var array
      */
     protected $casts = [
-        'date' => 'datetime',
+        'expire_at' => 'datetime:d-m-Y H:i:s',
+        'created_at' => 'datetime:d-m-Y H:i:s',
+        'subscribed_on' => 'datetime:d-m-Y H:i:s'
     ];
 
 

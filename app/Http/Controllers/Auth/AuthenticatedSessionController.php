@@ -19,9 +19,11 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // regenerate the session ID new session ID for logged in users
+        // avoid expoliting of session fixation
         $request->session()->regenerate();
 
-        return response(["success" => true]);
+        return response(["success" => true, "data" => Auth::user()]);
     }
 
     /**
@@ -34,8 +36,11 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
+        // delete session data
+        // avoid expoliting of session fixation
         $request->session()->invalidate();
 
+        // regenerate sessionID just for tracking logged out users
         $request->session()->regenerateToken();
 
         return response()->noContent();

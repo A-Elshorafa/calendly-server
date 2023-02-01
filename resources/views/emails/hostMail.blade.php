@@ -24,7 +24,7 @@
     <a>{{ $data['attendee']['email'] }}</a>
     <br/>
     <h3>Event Date:</h3>
-    <label>{{ $data['event']['date'] }}</label>
+    <label>{{ $data['event']['subscribed_on'] }}</label>
     <br/>
     <h3>Calendly Demo Link:</h3>
     <label>{{ $data['event']['calendly_link'] }}</label>
