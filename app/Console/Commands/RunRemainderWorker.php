@@ -57,15 +57,17 @@ class RunRemainderWorker extends Command
                 $attendee = $event->attendee->toArray();
                 // format event date, ex: 19:00 - Friday, 20 January 2023
                 $eventArray['subscribed_on'] = (new Carbon($eventArray['subscribed_on']))->format('H:i - l, d F Y');
-                // send subscription mail to host
+                // send remainder mail to host
                 Mail::to($host['email'])->send(new RemainderMail([
                     'host' => $host,
+                    'toHost' => true,
                     'event' => $eventArray,
                     'attendee' => $attendee,
                 ]));
-                // send subscription mail to attendee
+                // send remainder mail to attendee
                 Mail::to($attendee['email'])->send(new RemainderMail([
                     'host' => $host,
+                    'toHost' => false,
                     'event' => $eventArray,
                     'attendee' => $attendee,
                 ]));
