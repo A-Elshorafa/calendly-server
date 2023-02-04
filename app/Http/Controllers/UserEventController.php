@@ -108,7 +108,7 @@ class UserEventController extends Controller
             // get user event by id
             $userEvent = UserEvent::with(['host', 'attendee'])->where('id', $data['event_id'])->first();
             if ($userEvent['is_subscribed']) {
-                return response()->json(['success' => true, 'data' => null, 'is_subscribed' => true], 200);
+                return response()->json(['success' => true, 'data' => null, 'is_subscribed' => true], 500);
             }
 
             return response()->json(['success' => true, 'data' => $userEvent], 200);

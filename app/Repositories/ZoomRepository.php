@@ -111,8 +111,8 @@ class ZoomRepository implements ThirdPartyRepositoryInterface {
             "agenda" => $eventData->agenda,
             "password" => $eventData->password,
             "default_password" => false,
-            "timezone" => 'EET',//todo: $eventData->timeZone,
-            "start_time" => $eventData->subscribed_on,
+            "timezone" => 'Europe/Istanbul',//todo: $eventData->timeZone,
+            "start_time" => $eventData->subscribed_on->toIso8601ZuluString(),
             "schedule_for" => $hostEmail,
             "meeting_invitees" => [
                 (object)["email" => $eventData->attendee->email]

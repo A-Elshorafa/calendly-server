@@ -39,9 +39,9 @@ class UserEvent extends Model
      * @var array
      */
     protected $casts = [
-        'expire_at' => 'datetime:d-m-Y H:i:s',
-        'created_at' => 'datetime:d-m-Y H:i:s',
-        'subscribed_on' => 'datetime:d-m-Y H:i:s'
+        'expire_at' => 'datetime',
+        'subscribed_on' => 'datetime',
+        'created_at' => 'datetime:d-m-Y H:i:s'
     ];
 
 

@@ -59,13 +59,8 @@ class AttendeeController extends Controller
             if (isset($upcomingEventStatus)) {
                 // to avoid malicious requests
                 if ($userEvent->is_subscribed == false) {
-                    // get third party event refrences
-                    $thirdPartyEvent = $this->createThirdPartyEvent($userEvent);
-                    if (isset($thirdPartyEvent)) {
-                        // load third party data to userEvent
-                        $userEvent->password = $thirdPartyEvent->password;
-                        $userEvent->third_party_link = $thirdPartyEvent->meeting_url;
-                    }
+                    // create event password 8 alpha-numeric
+                    $userEvent->password = strtoupper(bin2hex(openssl_random_pseudo_bytes(4)));
                     // flage the event as subscribed which means can no longer use it
                     $userEvent->is_subscribed = true;
                     // update event to be up coming
@@ -74,7 +69,13 @@ class AttendeeController extends Controller
                     $userEvent->subscribed_on = $data['subscribed_on'];
                     // update expire date
                     $userEvent->expire_at = (new Carbon($data['subscribed_on']))->add($userEvent->duration, "minutes");
-                    // save into databaes
+                    // get third party event refrence
+                    // todo: add to a job
+                    $thirdPartyEvent = $this->createThirdPartyEvent($userEvent);
+                    if (isset($thirdPartyEvent)) {
+                        $userEvent->third_party_link = $thirdPartyEvent->meeting_url;
+                    }
+                    // save into database
                     $userEvent->save();
                 } else {
                     return response()->json(['success' => false, 'message' => 'this event is subscribed'], 200);
@@ -141,7 +142,6 @@ class AttendeeController extends Controller
     */
     public function createThirdPartyEvent($userEvent)
     {
-        $userEvent->password = strtoupper(bin2hex(openssl_random_pseudo_bytes(4)));
         return $this->thirdPartyRepository->createUserEvent($userEvent);
     }
 }
