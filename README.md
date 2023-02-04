@@ -1,3 +1,5 @@
+
+
 # create .env
 
     1- Create a file called .env at the root directory
@@ -27,10 +29,11 @@
 
 # Run Commands
 
-    1- php artisan key:generate
-    2- php artisan migrate
-    3- php artisan db:seed
-    4- php artisan schedule:work // run worker to send notification mails
-    5- php artisan serve
+    1- composer install
+    2- php artisan key:generate
+    3- php artisan migrate
+    4- php artisan db:seed
+    5- php artisan schedule:work // run worker to send notification mails
+    6- php artisan serve
 
 Enjoy schedulling :)
