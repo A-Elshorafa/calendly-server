@@ -5,7 +5,9 @@
   1- Create a file called .env at the root directory
   
   2- Copy .env.example to .env
-      // HINT: APP_URL, FRONTEND_URL, SANCTUM_STATEFUL_DOMAINS are set as defualt on .env.example if you want to change them you've to keep the domain name `localhost` and change the port
+      
+      HINT: APP_URL, FRONTEND_URL, SANCTUM_STATEFUL_DOMAINS are set as defualt on .env.example 
+            if you want to change them you've to keep the domain name `localhost` and change the port (for local testing)
 
   3- Create a sql DB and put your credientials on corresponding DB env variables
   
@@ -13,10 +15,13 @@
   
   5- Fill mailer credientials (Recommend to use mailtrap.io for quick testing)
   
-  6- ALLOW_SUBSCRIPTION_NOTIFICATION => if value `true` it will send subscription mails automatically, by default it `true` but you can change it.
+  6- ALLOW_SUBSCRIPTION_NOTIFICATION
+  
+    if value true it will send subscription mails automatically, change it to false to disable it
   
   7- Get your front-end https url and fill it instead of {https-front-end-url} and remove curly brackets
-      **if you don't have one follow calendly-client README.md to get your own https url**
+    
+    if you don't have one follow calendly-client README.md to get your own https url
 
   8- Fill zoom oAuth app ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET
       
