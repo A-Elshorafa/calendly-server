@@ -19,7 +19,8 @@ class UserEventStatusSeeder extends Seeder
         // ex: select all events where status === 1 (pending)
         $statuses = [
             ['name' => 'pending'],
-            ['name' => 'up coming']
+            ['name' => 'expired'],
+            ['name' => 'up coming'],
         ];
 
         UserEventStatus::insert($statuses);

@@ -15,7 +15,11 @@
     <h3>Event Name:</h3>
     <label>{{ $data['event']['name'] }}</label>
     <br/>
-    <h3>{{$data['event']['third_party_name']}} Link:</h3>
+    @if($data['toHost'])
+    <h3>attendee can join meeting using this link:</h3>
+    @else
+    <h3>you can join by this link:</h3>
+    @endif
     <label>{{ $data['event']['third_party_link'] }}</label>
     <br/>
     <h3>{{$data['event']['third_party_name']}} Password:</h3>

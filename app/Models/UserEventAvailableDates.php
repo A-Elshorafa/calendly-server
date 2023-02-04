@@ -15,7 +15,7 @@ class UserEventAvailableDates extends Model
     ];
 
     protected $casts = [
-        "date" => "datetime"
+        "date" => "datetime:Y-m-d"
     ];
 
     public function times() {

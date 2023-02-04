@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AttendeeController;
 use App\Http\Controllers\UserEventController;
 use App\Http\Controllers\ThirdParityController;
@@ -17,24 +18,19 @@ use App\Http\Controllers\ThirdParityController;
 |
 */
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::get('/getAuthUserInfo', [UserController::class, 'getAuthUserInfo'])->middleware(['auth:sanctum']);
 
 /// user events endpoints \\\
-// todo use auth middleware
-Route::post('storeEvent', [UserEventController::class, 'store']);
-Route::get('getEventInfo', [UserEventController::class, 'getEventInfo']);
-Route::get('getPendingEvents', [UserEventController::class, 'getPendingEvents']);
-Route::get('getUpComingEvents', [UserEventController::class, 'getUpComingEvents']);
+Route::get('getPendingEventDetails', [UserEventController::class, 'getPendingEventDetails']);
+Route::post('storeEvent', [UserEventController::class, 'store'])->middleware('auth:sanctum');
+Route::delete('deleteEvent', [UserEventController::class, "deleteEvent"])->middleware('auth:sanctum');
+Route::get('getPendingEvents', [UserEventController::class, 'getPendingEvents'])->middleware('auth:sanctum');
+Route::post('updateEventNotes', [UserEventController::class, 'updateEventNotes'])->middleware('auth:sanctum');
+Route::get('getUpComingEvents', [UserEventController::class, 'getUpComingEvents'])->middleware(['auth:sanctum']);
+Route::get('getUpcomingEventDetails', [UserEventController::class, 'getUpcomingEventDetails'])->middleware('auth:sanctum');
 
 /// attendee endpoints \\\
-Route::post('addAttendee', [AttendeeController::class, 'addAttendee']);
+Route::post('subscribeToEvent', [AttendeeController::class, 'subscribeToEvent']);
 
 //// third-party \\\\
-
-Route::get('/authorizeUser', [ThirdParityController::class, "authorizeUser"]);
-
-Route::get('/setUserTokens', [ThirdParityController::class, "storeUserTokens"])->middleware('auth:sanctum');
-Route::get('/refreshAccessToken', [ThirdParityController::class, 'refreshAccessToken'])->middleware('auth:sanctum');
-Route::get('/getUserInfo', [ThirdParityController::class, 'getUserInfo'])->middleware('auth:sanctum');
+Route::post('/setUserTokens', [ThirdParityController::class, "storeUserTokens"])->middleware('auth:sanctum');
