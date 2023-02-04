@@ -64,5 +64,10 @@
 ## First Login
 
   - After run client app use UsersTableSeeder user to get authenticated
+  
+    or
+
+  - You can register a new email
+
 
 > Enjoy schedulling :)

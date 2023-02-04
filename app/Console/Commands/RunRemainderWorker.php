@@ -46,11 +46,11 @@ class RunRemainderWorker extends Command
             UserEvent::where('is_notified', false)->where('is_subscribed', true)->get();
         foreach ($notNotifiedEvents as $event) {
             // while getting now() is before in egypt by 2 Hours(GMT+00)
-            $afterAnHour = (new Carbon(now(), 'EET'))->addMinutes(60);
+            $afterAnHour = (new Carbon())->addMinutes(60);
             // date stored as in request but with GMT+00,
             // so to make exact diff between now and event date want to make both GMT+02
             // in the meanwhile keep the event date with it's stored value but update GMT+00 to GMT+02
-            $eventDate = new Carbon($event->subscribed_on->format('Y-m-d H:i:s'), 'EET');
+            $eventDate = new Carbon($event->subscribed_on);
             if ($eventDate->isBefore($afterAnHour) || $eventDate->equalTo($afterAnHour)) {
                 $host = $event->host->toArray();
                 $eventArray = $event->toArray();

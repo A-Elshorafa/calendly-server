@@ -59,8 +59,6 @@ class AttendeeController extends Controller
             if (isset($upcomingEventStatus)) {
                 // to avoid malicious requests
                 if ($userEvent->is_subscribed == false) {
-                    // create event password 8 alpha-numeric
-                    $userEvent->password = strtoupper(bin2hex(openssl_random_pseudo_bytes(4)));
                     // flage the event as subscribed which means can no longer use it
                     $userEvent->is_subscribed = true;
                     // update event to be up coming
@@ -73,6 +71,7 @@ class AttendeeController extends Controller
                     // todo: add to a job
                     $thirdPartyEvent = $this->createThirdPartyEvent($userEvent);
                     if (isset($thirdPartyEvent)) {
+                        $userEvent->password = $thirdPartyEvent->password;
                         $userEvent->third_party_link = $thirdPartyEvent->meeting_url;
                     }
                     // save into database
