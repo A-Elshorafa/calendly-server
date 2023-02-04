@@ -109,7 +109,7 @@ class ZoomRepository implements ThirdPartyRepositoryInterface {
             "duration" => $eventData->duration,
             "topic" => $eventData->name,
             "agenda" => $eventData->agenda,
-            "password" => $eventData->password,
+            "password" => strtoupper(bin2hex(openssl_random_pseudo_bytes(4))),
             "default_password" => false,
             "timezone" => 'UTC',//todo: $eventData->timeZone,
             "start_time" => $eventData->subscribed_on->toIso8601ZuluString(),
