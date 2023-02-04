@@ -2,28 +2,35 @@
 
 namespace App\Repositories;
 
+use App\Models\ThirdParty;
+use App\Models\UserThirdParty;
 use App\Helpers\HttpRequestHelper;
-use Illuminate\Support\Facades\Log;
 use App\Repositories\ThirdPartyRepositoryInterface;
 
 class ZoomRepository implements ThirdPartyRepositoryInterface {
 
+    private static $thirdPartyId;
+
+    public function __construct() {
+        self::$thirdPartyId = ThirdParty::where('name', 'zoom')->first()->id;
+    }
     /**
-     * request to authorize the user
+     * return the authorization url
      * 
-     * @return redirect to the authorization page
+     * @return string
     */
     public static function userAuthorize()
     {
-        return redirect(env('ZOOM_AUTH') . env('ZOOM_CLIENT_ID') . '&redirect_uri=' . env('ZOOM_REDIRECT_URL'));
+        return env('ZOOM_AUTH') . env('ZOOM_CLIENT_ID') . '&redirect_uri=' . env('ZOOM_REDIRECT_URL');
     }
 
     /**
-     * get user tokens (access_token and refresh_token)
+     * get user tokens (access_token and refresh_token) from third party
      * 
      * @param $code
+     * @return array
     */
-    public static function getUserTokens($code)
+    public function getUserTokens($code)
     {
         $url = env('ZOOM_GET_AUTH_CODE') . '?grant_type=authorization_code&code=' . $code . "&redirect_uri=" . env('ZOOM_REDIRECT_URL');
         $headers = [
@@ -40,6 +47,10 @@ class ZoomRepository implements ThirdPartyRepositoryInterface {
         // call http request
         $response = HttpRequestHelper::sendRequest($url, "POST", [], $body, $headers);
 
+        if (isset($response) && property_exists($response, "error")) {
+            return null;
+        }
+
         return [
             "token_type" => $response->token_type,
             "access_token" => $response->access_token,
@@ -48,64 +59,157 @@ class ZoomRepository implements ThirdPartyRepositoryInterface {
     }
 
     /**
-     * get user inforamtion from a third-party
+     * create an event on a third-party
      * 
-     * @param $access_token
+     * @param $eventData
+     * @return ?object
     */
-    public function getUserInfo($access_token)
+    public function createUserEvent($eventData)
     {
-        $url = env('ZOOM_API_V2') . "//users/me";
-        $headers = [
-            'Authorization' => "Bearer " . $access_token,
-            'Content-Type' => "application/x-www-form-urlencoded"
-        ];
-
-        $response = HttpRequestHelper::sendRequest($url, "GET", [], [], $headers);
-        // since token refresh corrupted let's redierct the user to re-authorize again
-        if ($response->code === 124) {// token expired
-            return $this->userAuthorize();
+        $hostId = $eventData->host->id;
+        
+        $userAccessTokens = $this->getUserAccessTokens($hostId);
+        if (is_null($userAccessTokens)) {
+            return null;
         }
 
-        return $response;
+        $response = $this->sendCreateEventRequest($eventData, $userAccessTokens);
+        // since token refresh corrupted let's redierct the user to re-authorize again
+        if (is_object($response) && property_exists($response, 'code') && $response->code === 124) {// token expired
+            $refreshedTokens = $this->refreshAccessToken($eventData->host->id, $userAccessTokens['refresh_token']);
+            if (!is_null($refreshedTokens)) {
+                // retry after tokens refreshed
+                $response = $this->sendCreateEventRequest($eventData, $refreshedTokens);
+            }
+        }
+
+        if (isset($response) && property_exists($response, 'start_url')) {
+            return (object) [
+                "password" => $response->password,
+                "meeting_url" => $response->join_url
+            ];
+        }
+        return null;
     }
 
     /**
-     * create an event from a third-party
+     * send creation request to the corresponding third-party
      * 
-     * @param $access_token
+     * @param $eventData
+     * @param $userAccessTokens
+     *
+     * @return object
     */
-    public function createUserEvent($access_token)
+    public function sendCreateEventRequest($eventData, $userAccessTokens)
     {
-        $url =  env('ZOOM_API_V2') . "/users/{userId}/meetings";
+        $hostEmail = $eventData->host->email;
+        $url =  env('ZOOM_API_V2') . "/users/$hostEmail/meetings";
         $body = [
-            "type" => 2,
-            "duration" => 30,
-            "topic" => "TOPIC",
-            "timezone" => "EET",
-            "agenda" => "agenda",
-            "password" => 123456,
-            "pre_schedule" => true,
+            "type" => 2, // A scheduled meeting. 
+            "duration" => $eventData->duration,
+            "topic" => $eventData->name,
+            "agenda" => $eventData->agenda,
+            "password" => $eventData->password,
             "default_password" => false,
-            "end_times" => 1,
-            "recurrence" => [
-                "type" => 1
-            ],
-            "start_time" => "2023-1-22T12:00:00Z",
-            "end_date_time" => "2023-1-22 12:30:00",
-            "schedule_for" => "abdelrahman_elshorafa@outlook.com",
+            "timezone" => 'EET',//todo: $eventData->timeZone,
+            "start_time" => $eventData->subscribed_on,
+            "schedule_for" => $hostEmail,
+            "meeting_invitees" => [
+                (object)["email" => $eventData->attendee->email]
+            ]
         ];
 
         $headers = [
-            'Authorization' => "Bearer " . $access_token,
-            'Content-Type' => "application/x-www-form-urlencoded"
+            'Authorization' => "Bearer " . $userAccessTokens['access_token'],
+            'Content-Type' => "application/json"
         ];
 
-        $response = HttpRequestHelper::sendRequest($url, "POST", [], [], $headers);
-        // since token refresh corrupted let's redierct the user to re-authorize again
-        if ($response->code === 124) {// token expired
-            return $this->userAuthorize();
+        return HttpRequestHelper::sendRequest($url, "POST", [], $body, $headers);
+    }
+
+    /**
+     * refresh access tokens then update access tokens on DB
+     * 
+     * @param $userId
+     * @param $refreshToken
+     * 
+     * @return ?array
+    */
+    public function refreshAccessToken($userId, $refreshToken)
+    {
+        $refresh_url = env('ZOOM_GET_AUTH_CODE') . "?grant_type=refresh_token&refresh_token=$refreshToken";
+        $headers = [
+            'Content-Type' => "application/x-www-form-urlencoded",
+            'Authorization' => "Basic " . base64_encode(env('ZOOM_CLIENT_ID').':'.env('ZOOM_CLIENT_SECRET'))
+        ];
+        $response = HttpRequestHelper::sendRequest($refresh_url, "POST", [], [], $headers);
+        if (is_object($response) && property_exists($response, 'access_token')) {
+            $this->updateAccessTokens($response, $userId);
+            return (array)$response;
+        }
+        return null;
+    }
+
+    /**
+     * update access users' tokens on DB
+     * 
+     * @param $accessTokens
+     * @param $userId
+     * 
+     * @return void
+    */
+    public function updateAccessTokens($accessTokens, $userId)
+    {
+        UserThirdParty::where('user_id', $userId)->where('third_party_id', self::$thirdPartyId)->update([
+            "access_token" => $accessTokens->access_token,
+            "refresh_token" => $accessTokens->refresh_token,
+        ]);
+    }
+
+    /**
+     * get user access-tokens from DB
+     * 
+     * @param $userId
+     * @return ?array
+    */
+    public function getUserAccessTokens($userId)
+    {
+        $userAccessToken = null;
+        $userThirdParty = UserThirdParty::where('user_id', $userId)->where('third_party_id', self::$thirdPartyId)->first();
+        if (isset($userThirdParty)) {
+            $userAccessToken = $userThirdParty->toArray();
         }
 
-        return $response;
+        return $userAccessToken;
+    }
+
+    /**
+     * store retrieved user tokens on the DB and returs a copy of them
+     * 
+     * @param $userId 
+     * @param $code
+     * @param $tokens
+     * 
+     * @return UserThirdParty
+    */
+    public function storeTokens($userId, $code, $tokens)
+    {
+        $userThirdParty = UserThirdParty::where('user_id', $userId)->where('third_party_id', self::$thirdPartyId)->first();
+
+        if (!empty($userThirdParty)) {
+            $userThirdParty->access_token = $tokens['access_token'];
+            $userThirdParty->refresh_token = $tokens['refresh_token'];
+            $userThirdParty->save();
+            $userThirdParty->fresh();
+        } else {
+            $userThirdParty = UserThirdParty::create([
+                'token' => $code,
+                'user_id' => $userId,
+                'third_party_id' => self::$thirdPartyId,
+                'access_token' => $tokens['access_token'],
+                'refresh_token' => $tokens['refresh_token'],
+            ]);
+        }
+        return $userThirdParty;
     }
 }

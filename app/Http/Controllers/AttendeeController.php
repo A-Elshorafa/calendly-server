@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Mail;
+use Exception;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendee;
@@ -11,9 +12,17 @@ use App\Mail\SubscribeMail;
 use Illuminate\Http\Request;
 use App\Models\UserEventStatus;
 use Illuminate\Support\Facades\DB;
+use App\Repositories\ThirdPartyRepositoryInterface;
 
 class AttendeeController extends Controller
 {
+    protected $thirdPartyRepository;
+
+    public function __construct(ThirdPartyRepositoryInterface $thirdPartyRepository)
+    {
+        $this->thirdPartyRepository = $thirdPartyRepository;
+    }
+
     /**
      * add attendee to an event
      * 
@@ -21,7 +30,10 @@ class AttendeeController extends Controller
     */
     public function subscribeToEvent(Request $request)
     {
-        $request->validate(['name' => 'required', 'email' => 'email']);
+        $request->validate([
+            'email' => 'email',
+            'name' => 'required',
+        ]);
         try {
             $data = $request->all();
     
@@ -36,7 +48,7 @@ class AttendeeController extends Controller
 
 
             // check user event is found
-            $userEvent = UserEvent::where('id', $data['event_id'])->first();
+            $userEvent = UserEvent::with(['attendee', 'host'])->where('id', $data['event_id'])->first();
             if (!isset($userEvent)) {
                 return response()->json(['success' => false, 'message' => 'this event not found'], 200);
             }
@@ -47,6 +59,13 @@ class AttendeeController extends Controller
             if (isset($upcomingEventStatus)) {
                 // to avoid malicious requests
                 if ($userEvent->is_subscribed == false) {
+                    // get third party event refrences
+                    $thirdPartyEvent = $this->createThirdPartyEvent($userEvent);
+                    if (isset($thirdPartyEvent)) {
+                        // load third party data to userEvent
+                        $userEvent->password = $thirdPartyEvent->password;
+                        $userEvent->third_party_link = $thirdPartyEvent->meeting_url;
+                    }
                     // flage the event as subscribed which means can no longer use it
                     $userEvent->is_subscribed = true;
                     // update event to be up coming
@@ -64,12 +83,16 @@ class AttendeeController extends Controller
                 return response()->json(['success' => false, 'message' => 'up coming status not found'], 200);
             }
 
+            DB::commit();
             if (env('ALLOW_SUBSCRIPTION_NOTIFICATION', false)) {
-                // send subscription mails to host and attendee(invitee)
-                $this->sendSubsciptionMails($userEvent);
+                // use try and catch to don't fail the subscription process
+                // todo: run this on a job instead of try and catch
+                try {
+                    // send subscription mails to host and attendee(invitee)
+                    $this->sendSubsciptionMails($userEvent);
+                } catch (Exception $ex) {}
             }
 
-            DB::commit();
             // refresh event after update, eager load host(user) relation
             $userEvent = $userEvent->fresh('host');
             return response()->json(['success' => true, 'data' => $userEvent], 200);
@@ -105,5 +128,20 @@ class AttendeeController extends Controller
             'attendee' => $attendee,
         ]));
         return response()->json(['message' => 'succeeded']);
+    }
+
+    /**
+     * create a third party event then return it's data
+     * data? = [
+     *   password 
+     *   meeting_url
+     * ]
+     * 
+     * @param $userEvent
+    */
+    public function createThirdPartyEvent($userEvent)
+    {
+        $userEvent->password = strtoupper(bin2hex(openssl_random_pseudo_bytes(4)));
+        return $this->thirdPartyRepository->createUserEvent($userEvent);
     }
 }

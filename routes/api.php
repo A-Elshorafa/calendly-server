@@ -33,7 +33,4 @@ Route::get('getUpcomingEventDetails', [UserEventController::class, 'getUpcomingE
 Route::post('subscribeToEvent', [AttendeeController::class, 'subscribeToEvent']);
 
 //// third-party \\\\
-Route::get('/getUserInfo', [ThirdParityController::class, 'getUserInfo'])->middleware('auth:sanctum');
-Route::get('/authorizeUser', [ThirdParityController::class, "authorizeUser"])->middleware('auth:sanctum');
-Route::get('/setUserTokens', [ThirdParityController::class, "storeUserTokens"])->middleware('auth:sanctum');
-Route::get('/refreshAccessToken', [ThirdParityController::class, 'refreshAccessToken'])->middleware('auth:sanctum');
+Route::post('/setUserTokens', [ThirdParityController::class, "storeUserTokens"])->middleware('auth:sanctum');

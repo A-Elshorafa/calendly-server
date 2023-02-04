@@ -25,7 +25,7 @@ class ThirdParityServiceProvider extends ServiceProvider
     */
     public function thirdParityBinding(Request $request)
     {
-        $thirdParity = $request->get('third_parity_name');
+        $thirdParity = $request->get('third_party_name');
         if (!empty($thirdParity) && class_exists("\App\Repositories\\". ucfirst($thirdParity) ."Repository")) {
             $this->app->bind(
                 \App\Repositories\ThirdPartyRepositoryInterface::class, 

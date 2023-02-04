@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ThirdParty;
 use Illuminate\Http\Request;
+use App\Models\UserThirdParty;
 use App\Repositories\ThirdPartyRepositoryInterface;
 
 class ThirdParityController extends Controller
@@ -15,45 +17,38 @@ class ThirdParityController extends Controller
         $this->thirdPartyRepository = $thirdPartyRepository;
     }
 
-    public function authorizeUser()
-    {
-        return $this->thirdPartyRepository->userAuthorize();
-    }
-
+    /**
+     * gets the users access-token and refresh-token, then save them on the DB
+     * 
+     * @param $request
+     * @return Response
+    */
     public function storeUserTokens(Request $request)
     {
+        $request->validate([
+            'code' => 'required',
+            'user_id' => 'required'
+        ]);
         try {
             $code = $request->get('code');
-            /**
-             * it returns access_token, refresh_token and token_type  
-            */
+            // returns access_token, refresh_token and token_type from third party 
             $userTokens = $this->thirdPartyRepository->getUserTokens($code);
 
-            $request->session()->put($userTokens);
+            if(is_null($userTokens)) {
+                return response()->json(['success' => false, "message" => "faild to get user tokens"], 500);
+            }
 
-            return response()->json(['success' => true, "message" => $request->session()->all()], 200);
+            $userId = $request->get('user_id');
+            $user = User::where('id', $userId)->first();
+            if (!isset($user)) {
+                return response()->json(['success' => false, "message" => "user not found"], 500);
+            }
+            // store access tokens on DB
+            $tokensReference = $this->thirdPartyRepository->storeTokens($userId, $code, $userTokens);
+
+            return response()->json(['success' => true, "message" => "access tokens saved successfully"], 200);
         } catch (Exception $ex) {
             return response()->json(['success' => false, "message" => "server error"], 500);
         }
-    }
-
-    public function getUserInfo(Request $request)
-    {
-        // redirect user to authorize if the access token not found
-        if (!$request->session()->has('access_token')) {
-            return $this->thirdPartyRepository->userAuthorize();
-        }
-
-        return $this->thirdPartyRepository->getUserInfo($request->session()->get('access_token'));
-    }
-
-    public function createUserEvent(Request $request)
-    {
-        // redirect user to authorize if the access token not found
-        if (!$request->session()->has('access_token')) {
-            return $this->thirdPartyRepository->userAuthorize();
-        }
-
-        return $this->thirdPartyRepository->createUserEvent($request->session()->get('access_token'));
-    }
+    }    
 }

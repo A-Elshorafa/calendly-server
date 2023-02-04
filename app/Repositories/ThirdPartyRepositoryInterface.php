@@ -5,30 +5,75 @@ namespace App\Repositories;
 interface ThirdPartyRepositoryInterface {
 
     /**
-     * request to authorize the user
+     * return the authorization url
      * 
-     * @return redirect to the authorization page
+     * @return string
     */
     public static function userAuthorize();
 
     /**
-     * get user tokens (access_token and refresh_token)
+     * get user tokens (access_token and refresh_token) from third party
      * 
      * @param $code
+     * @return array
     */
-    public static function getUserTokens($code);
+    public function getUserTokens($code);
 
     /**
-     * get user inforamtion from a third-party
+     * create an event on a third-party
      * 
-     * @param $access_token
+     * @param $eventData
+     * @return ?object
     */
-    public function getUserInfo($access_token);
+    public function createUserEvent($eventData);
 
     /**
-     * create an event from a third-party
+     * send creation request to the corresponding third-party
      * 
-     * @param $access_token
+     * @param $eventData
+     * @param $userAccessTokens
+     *
+     * @return object
     */
-    public function createUserEvent($access_token);
+    public function sendCreateEventRequest($eventData, $userAccessTokens);
+
+    /**
+     * refresh access tokens then update access tokens on DB
+     * 
+     * @param $userId
+     * @param $refreshToken
+     * 
+     * @return ?array
+    */
+    public function refreshAccessToken($userId, $refreshToken);
+
+    /**
+     * update access users' tokens on DB
+     * 
+     * @param $accessTokens
+     * @param $userId
+     * 
+     * @return void
+    */
+    public function updateAccessTokens($accessTokens, $userId);
+
+    
+    /**
+     * get user access-tokens from DB
+     * 
+     * @param $userId
+     * @return ?array
+    */
+    public function getUserAccessTokens($userId);
+
+    /**
+     * store retrieved user tokens on the DB and returs a copy of them
+     * 
+     * @param $userId 
+     * @param $code
+     * @param $tokens
+     * 
+     * @return UserThirdParty
+    */
+    public function storeTokens($userId, $code, $tokens);
 }

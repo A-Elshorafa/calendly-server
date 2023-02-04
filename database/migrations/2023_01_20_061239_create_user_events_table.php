@@ -24,8 +24,8 @@ class CreateUserEventsTable extends Migration
             $table->string('password')->nullable();
             $table->dateTime('subscribed_on')->nullable();
             $table->boolean('is_subscribed')->default(false);
-            $table->string('calendly_link')->nullable()->index();
-            $table->string('third_party_link')->nullable()->index();
+            $table->string('calendly_link')->nullable();
+            $table->longText('third_party_link')->nullable();
             $table->boolean('is_notified')->default(false)->index();
             $table->unsignedInteger('user_event_status_id')->index();
             $table->unsignedBigInteger('user_id')->nullable()->index();
