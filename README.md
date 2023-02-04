@@ -1,5 +1,3 @@
-
-
 ## Create .env
 
   1- Create a file called .env at the root directory
