@@ -36,20 +36,23 @@
   
   4- Choose OAuth type
   
-  5- At App Credentials menu, under `Development` section put your ZOOM_REDIRECT_URL
+  5- Choose **Account-Level** App
   
-    Note: you've to keep update your redirect if you changed your https url 
-          as well as CLIENT_ID and CLIENT_SECERT you have to keep your Zoom app and .env updated
-  
-  6- Specify this app credentials **View and manage all user meetings**
-
-  7- At the end copy CLIENT_ID and CLIENT_SECERT and use them on ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET at .env, respectively
-
-  8- Set _Redirect url_ _for OAuth_ under **Development** section, with your .env **ZOOM_REDIRECT_URL**
+  6- At App Credentials menu, under `Development` section set _Redirect url_ _for OAuth_ with your .env **ZOOM_REDIRECT_URL**
 
     Make sure that you replace the https url before set redirect_url on zoom app
+  
+  7- Add your https url under **OAuth allow list** under **Add allow lists** then wait some seconds to save your changes
 
-  9- Add your https url under **OAuth allow list** under **Add allow lists** then wait some seconds to save your changes
+  8- Copy CLIENT_ID and CLIENT_SECERT and use them on ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET at .env, respectively
+
+  9- At the end On Scopes Menu 
+      
+      a- Click Add Scopes
+      b- At Meeting Menu
+      c- Select **View and manage all user meetings**
+
+  ***Note:*** you've to keep update your .env ZOOM_REDIRECT_URL, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET by your zoom application values, they **MUST** be the same all the time
 
 ## Run Commands
 
@@ -63,7 +66,7 @@
 
 ## First Login
 
-  - After run client app use UsersTableSeeder user to get authenticated
+  - After finish running the client app use UsersTableSeeder user to get authenticated
   
     or
 
